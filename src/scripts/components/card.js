@@ -35,7 +35,7 @@ export const createCardElement = (
   }
 
   if (onPreviewPicture) {
-    cardImage.addEventListener("click", () => onPreviewPicture({name: data.name, link: data.link}));
+    cardImage.addEventListener("click", () => onPreviewPicture({ name: data.name, link: data.link }));
   }
 
   return cardElement;
