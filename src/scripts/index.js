@@ -133,8 +133,6 @@ const handleInfoClick = async (cardId) => {
     cardInfoModalInfoList.innerHTML = "";
     cardInfoModalUserList.innerHTML = "";
 
-    cardInfoModalTitle.textContent = "Информация о карточке";
-
     cardInfoModalInfoList.append(
       createInfoItem("Описание:", card.name)
     );
