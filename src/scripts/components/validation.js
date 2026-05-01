@@ -16,19 +16,28 @@ const hideInputError = (formElement, inputElement, settings) => {
   }
 };
 
-const checkInputValidity = (formElement, inputElement, settings) => {
-  if (!inputElement.validity.valid) {
+const checkCustomValidation = (inputElement, settings) => {
+  if (!settings.customValidationRules) return null;
 
-    let errorMessage = inputElement.validationMessage;
-
-    if (inputElement.id === 'user-name' || inputElement.id === 'place-name') {
-      const regex = /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/;
-      if (!regex.test(inputElement.value) && inputElement.value !== '') {
-        errorMessage = inputElement.dataset.errorMessage || errorMessage;
-      }
+  const rule = settings.customValidationRules.find(r => r.inputId === inputElement.id);
+  if (rule && rule.regex && inputElement.value !== '') {
+    if (!rule.regex.test(inputElement.value)) {
+      return rule.errorMessage;
     }
+  }
+  return null;
+};
 
-    showInputError(formElement, inputElement, errorMessage, settings);
+const checkInputValidity = (formElement, inputElement, settings) => {
+  const customError = checkCustomValidation(inputElement, settings);
+
+  if (customError) {
+    showInputError(formElement, inputElement, customError, settings);
+    return false;
+  }
+
+  if (!inputElement.validity.valid) {
+    showInputError(formElement, inputElement, inputElement.validationMessage, settings);
     return false;
   } else {
     hideInputError(formElement, inputElement, settings);
@@ -74,7 +83,7 @@ const setEventListeners = (formElement, settings) => {
   });
 };
 
-const clearValidation = (formElement, settings) => {
+export const clearValidation = (formElement, settings) => {
   const inputList = Array.from(formElement.querySelectorAll(settings.inputSelector));
   const buttonElement = formElement.querySelector(settings.submitButtonSelector);
 
@@ -89,23 +98,10 @@ const clearValidation = (formElement, settings) => {
   }
 };
 
-const enableValidation = (settings) => {
+export const enableValidation = (settings) => {
   const formList = Array.from(document.querySelectorAll(settings.formSelector));
 
   formList.forEach((formElement) => {
     setEventListeners(formElement, settings);
   });
-};
-
-export {
-  enableValidation,
-  clearValidation,
-  showInputError,
-  hideInputError,
-  checkInputValidity,
-  hasInvalidInput,
-  disableSubmitButton,
-  enableSubmitButton,
-  toggleButtonState,
-  setEventListeners
 };
