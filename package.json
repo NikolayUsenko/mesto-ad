@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/NikolayUsenko/mesto-ad/issues"
   },
-  "homepage": "https://github.com/NikolayUsenko/mesto-ad#readme"
+  "homepage": "https://github.com/NikolayUsenko/mesto-ad#readme",
+  "devDependencies": {
+    "vite": "^8.0.10"
+  }
 }
