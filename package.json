@@ -1,25 +1,13 @@
 {
-  "name": "yandex-practicum-project-work-7",
+  "name": "mesto",
   "version": "1.0.0",
-  "description": "",
+  "description": "Итоговая проектная работа от Яндекс Практикум",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/NikolayUsenko/mesto-ad.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/NikolayUsenko/mesto-ad/issues"
-  },
-  "homepage": "https://github.com/NikolayUsenko/mesto-ad#readme",
   "devDependencies": {
-    "vite": "^8.0.10"
+    "vite": "^8.0.8"
   }
 }
