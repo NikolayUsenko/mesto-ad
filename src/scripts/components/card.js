@@ -1,8 +1,6 @@
-import { changeLikeCardStatus, deleteCardFromServer } from "./api.js";
-
-export const likeCard = async (cardId, likeButton, likeCountElement, isLiked) => {
+export const likeCard = async (cardId, likeButton, likeCountElement, isLiked, changeLikeStatus) => {
   try {
-    const updatedCard = await changeLikeCardStatus(cardId, isLiked);
+    const updatedCard = await changeLikeStatus(cardId, isLiked);
     likeButton.classList.toggle("card__like-button_is-active");
     likeCountElement.textContent = updatedCard.likes.length;
     return updatedCard;
@@ -11,9 +9,9 @@ export const likeCard = async (cardId, likeButton, likeCountElement, isLiked) =>
   }
 };
 
-export const deleteCard = async (cardId, cardElement) => {
+export const deleteCard = async (cardId, cardElement, deleteFromServer) => {
   try {
-    await deleteCardFromServer(cardId);
+    await deleteFromServer(cardId);
     cardElement.remove();
   } catch (err) {
     console.error("Ошибка при удалении карточки:", err);
@@ -54,7 +52,7 @@ export const createCardElement = (
     deleteButton.remove();
   }
 
-  if (onLikeIcon) {
+  if (onLikeIcon && isOwner !== undefined) {
     likeButton.addEventListener("click", () => {
       const isCurrentlyLiked = likeButton.classList.contains("card__like-button_is-active");
       onLikeIcon(data._id, likeButton, likeCountElement, isCurrentlyLiked);
