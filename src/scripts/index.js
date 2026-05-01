@@ -49,7 +49,12 @@ const avatarFormModalWindow = document.querySelector(".popup_type_edit-avatar");
 const avatarForm = avatarFormModalWindow.querySelector(".popup__form");
 const avatarInput = avatarForm.querySelector(".popup__input");
 
+const removeCardModalWindow = document.querySelector(".popup_type_remove-card");
+const removeCardForm = removeCardModalWindow?.querySelector(".popup__form");
+
 let currentUserId = null;
+let cardToDeleteId = null;
+let cardToDeleteElement = null;
 
 const handlePreviewPicture = ({ name, link }) => {
   imageElement.src = link;
@@ -58,8 +63,30 @@ const handlePreviewPicture = ({ name, link }) => {
   openModalWindow(imageModalWindow);
 };
 
+const setButtonLoading = (button, isLoading, defaultText, loadingText) => {
+  if (isLoading) {
+    button.textContent = loadingText;
+    button.disabled = true;
+  } else {
+    button.textContent = defaultText;
+    button.disabled = false;
+  }
+};
+
+const openRemoveCardModal = (cardId, cardElement) => {
+  cardToDeleteId = cardId;
+  cardToDeleteElement = cardElement;
+  clearValidation(removeCardForm, validationSettings);
+  openModalWindow(removeCardModalWindow);
+};
+
 const handleProfileFormSubmit = async (evt) => {
   evt.preventDefault();
+  const submitButton = profileForm.querySelector(".popup__button");
+  const defaultText = submitButton.textContent;
+
+  setButtonLoading(submitButton, true, defaultText, "Сохранение...");
+
   try {
     const userData = await setUserInfo({
       name: profileTitleInput.value,
@@ -70,11 +97,18 @@ const handleProfileFormSubmit = async (evt) => {
     closeModalWindow(profileFormModalWindow);
   } catch (err) {
     console.error("Ошибка при обновлении профиля:", err);
+  } finally {
+    setButtonLoading(submitButton, false, defaultText, "Сохранение...");
   }
 };
 
 const handleAvatarFormSubmit = async (evt) => {
   evt.preventDefault();
+  const submitButton = avatarForm.querySelector(".popup__button");
+  const defaultText = submitButton.textContent;
+
+  setButtonLoading(submitButton, true, defaultText, "Сохранение...");
+
   try {
     const userData = await setUserAvatar(avatarInput.value);
     profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
@@ -83,11 +117,18 @@ const handleAvatarFormSubmit = async (evt) => {
     clearValidation(avatarForm, validationSettings);
   } catch (err) {
     console.error("Ошибка при обновлении аватара:", err);
+  } finally {
+    setButtonLoading(submitButton, false, defaultText, "Сохранение...");
   }
 };
 
 const handleCardFormSubmit = async (evt) => {
   evt.preventDefault();
+  const submitButton = cardForm.querySelector(".popup__button");
+  const defaultText = submitButton.textContent;
+
+  setButtonLoading(submitButton, true, defaultText, "Создание...");
+
   try {
     const newCard = await addCard({
       name: cardNameInput.value,
@@ -96,8 +137,11 @@ const handleCardFormSubmit = async (evt) => {
     placesWrap.prepend(
       createCardElement(newCard, {
         onPreviewPicture: handlePreviewPicture,
-        onLikeIcon: likeCard,
-        onDeleteCard: deleteCard,
+        onLikeIcon: (cardId, likeButton, likeCountElement, isLiked) =>
+          likeCard(cardId, likeButton, likeCountElement, isLiked),
+        onDeleteCard: (cardId, cardElement) => {
+          openRemoveCardModal(cardId, cardElement);
+        },
         currentUserId,
       })
     );
@@ -106,6 +150,27 @@ const handleCardFormSubmit = async (evt) => {
     clearValidation(cardForm, validationSettings);
   } catch (err) {
     console.error("Ошибка при добавлении карточки:", err);
+  } finally {
+    setButtonLoading(submitButton, false, defaultText, "Создание...");
+  }
+};
+
+const handleRemoveCardSubmit = async (evt) => {
+  evt.preventDefault();
+  const submitButton = removeCardForm.querySelector(".popup__button");
+  const defaultText = submitButton.textContent;
+
+  setButtonLoading(submitButton, true, defaultText, "Удаление...");
+
+  try {
+    await deleteCard(cardToDeleteId, cardToDeleteElement);
+    closeModalWindow(removeCardModalWindow);
+    cardToDeleteId = null;
+    cardToDeleteElement = null;
+  } catch (err) {
+    console.error("Ошибка при удалении карточки:", err);
+  } finally {
+    setButtonLoading(submitButton, false, defaultText, "Удаление...");
   }
 };
 
@@ -113,6 +178,10 @@ const handleCardFormSubmit = async (evt) => {
 profileForm.addEventListener("submit", handleProfileFormSubmit);
 cardForm.addEventListener("submit", handleCardFormSubmit);
 avatarForm.addEventListener("submit", handleAvatarFormSubmit);
+
+if (removeCardForm) {
+  removeCardForm.addEventListener("submit", handleRemoveCardSubmit);
+}
 
 openProfileFormButton.addEventListener("click", () => {
   profileTitleInput.value = profileTitle.textContent;
@@ -146,8 +215,11 @@ Promise.all([getCardList(), getUserInfo()])
       placesWrap.append(
         createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
-          onLikeIcon: likeCard,
-          onDeleteCard: deleteCard,
+          onLikeIcon: (cardId, likeButton, likeCountElement, isLiked) =>
+            likeCard(cardId, likeButton, likeCountElement, isLiked),
+          onDeleteCard: (cardId, cardElement) => {
+            openRemoveCardModal(cardId, cardElement);
+          },
           currentUserId,
         })
       );
