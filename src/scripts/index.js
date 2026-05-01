@@ -6,7 +6,7 @@
   Из index.js не допускается что то экспортировать
 */
 
-import { initialCards } from "./cards.js";
+import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard } from "./components/api.js";
 import { createCardElement, deleteCard, likeCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validation.js";
@@ -49,6 +49,8 @@ const avatarFormModalWindow = document.querySelector(".popup_type_edit-avatar");
 const avatarForm = avatarFormModalWindow.querySelector(".popup__form");
 const avatarInput = avatarForm.querySelector(".popup__input");
 
+let currentUserId = null;
+
 const handlePreviewPicture = ({ name, link }) => {
   imageElement.src = link;
   imageElement.alt = name;
@@ -56,45 +58,61 @@ const handlePreviewPicture = ({ name, link }) => {
   openModalWindow(imageModalWindow);
 };
 
-const handleProfileFormSubmit = (evt) => {
+const handleProfileFormSubmit = async (evt) => {
   evt.preventDefault();
-  profileTitle.textContent = profileTitleInput.value;
-  profileDescription.textContent = profileDescriptionInput.value;
-  closeModalWindow(profileFormModalWindow);
+  try {
+    const userData = await setUserInfo({
+      name: profileTitleInput.value,
+      about: profileDescriptionInput.value,
+    });
+    profileTitle.textContent = userData.name;
+    profileDescription.textContent = userData.about;
+    closeModalWindow(profileFormModalWindow);
+  } catch (err) {
+    console.error("Ошибка при обновлении профиля:", err);
+  }
 };
 
-const handleAvatarFromSubmit = (evt) => {
+const handleAvatarFormSubmit = async (evt) => {
   evt.preventDefault();
-  profileAvatar.style.backgroundImage = `url(${avatarInput.value})`;
-  closeModalWindow(avatarFormModalWindow);
-  avatarForm.reset();
-  clearValidation(avatarForm, validationSettings);
+  try {
+    const userData = await setUserAvatar(avatarInput.value);
+    profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
+    closeModalWindow(avatarFormModalWindow);
+    avatarForm.reset();
+    clearValidation(avatarForm, validationSettings);
+  } catch (err) {
+    console.error("Ошибка при обновлении аватара:", err);
+  }
 };
 
-const handleCardFormSubmit = (evt) => {
+const handleCardFormSubmit = async (evt) => {
   evt.preventDefault();
-  placesWrap.prepend(
-    createCardElement(
-      {
-        name: cardNameInput.value,
-        link: cardLinkInput.value,
-      },
-      {
+  try {
+    const newCard = await addCard({
+      name: cardNameInput.value,
+      link: cardLinkInput.value,
+    });
+    placesWrap.prepend(
+      createCardElement(newCard, {
         onPreviewPicture: handlePreviewPicture,
         onLikeIcon: likeCard,
         onDeleteCard: deleteCard,
-      }
-    )
-  );
-  closeModalWindow(cardFormModalWindow);
-  cardForm.reset();
-  clearValidation(cardForm, validationSettings);
+        currentUserId,
+      })
+    );
+    closeModalWindow(cardFormModalWindow);
+    cardForm.reset();
+    clearValidation(cardForm, validationSettings);
+  } catch (err) {
+    console.error("Ошибка при добавлении карточки:", err);
+  }
 };
 
 // EventListeners
 profileForm.addEventListener("submit", handleProfileFormSubmit);
 cardForm.addEventListener("submit", handleCardFormSubmit);
-avatarForm.addEventListener("submit", handleAvatarFromSubmit);
+avatarForm.addEventListener("submit", handleAvatarFormSubmit);
 
 openProfileFormButton.addEventListener("click", () => {
   profileTitleInput.value = profileTitle.textContent;
@@ -115,16 +133,29 @@ openCardFormButton.addEventListener("click", () => {
   openModalWindow(cardFormModalWindow);
 });
 
-// отображение карточек
-initialCards.forEach((data) => {
-  placesWrap.append(
-    createCardElement(data, {
-      onPreviewPicture: handlePreviewPicture,
-      onLikeIcon: likeCard,
-      onDeleteCard: deleteCard,
-    })
-  );
-});
+// загрузка данных с сервера
+Promise.all([getCardList(), getUserInfo()])
+  .then(([cards, userData]) => {
+    currentUserId = userData._id;
+
+    profileTitle.textContent = userData.name;
+    profileDescription.textContent = userData.about;
+    profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
+
+    cards.forEach((card) => {
+      placesWrap.append(
+        createCardElement(card, {
+          onPreviewPicture: handlePreviewPicture,
+          onLikeIcon: likeCard,
+          onDeleteCard: deleteCard,
+          currentUserId,
+        })
+      );
+    });
+  })
+  .catch((err) => {
+    console.error("Ошибка при загрузке данных:", err);
+  });
 
 // настраиваем обработчики закрытия попапов
 const allPopups = document.querySelectorAll(".popup");
