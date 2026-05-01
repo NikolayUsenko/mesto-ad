@@ -52,9 +52,40 @@ const avatarInput = avatarForm.querySelector(".popup__input");
 const removeCardModalWindow = document.querySelector(".popup_type_remove-card");
 const removeCardForm = removeCardModalWindow?.querySelector(".popup__form");
 
+const cardInfoModalWindow = document.querySelector(".popup_type_info");
+const cardInfoModalTitle = cardInfoModalWindow.querySelector(".popup__title");
+const cardInfoModalInfoList = cardInfoModalWindow.querySelector(".popup__info");
+const cardInfoModalText = cardInfoModalWindow.querySelector(".popup__text");
+const cardInfoModalUserList = cardInfoModalWindow.querySelector(".popup__list");
+
+const infoDefinitionTemplate = document.getElementById("popup-info-definition-template");
+const userPreviewTemplate = document.getElementById("popup-info-user-preview-template");
+
 let currentUserId = null;
 let cardToDeleteId = null;
 let cardToDeleteElement = null;
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("ru-RU", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+const createInfoItem = (term, description) => {
+  const itemElement = infoDefinitionTemplate.content.cloneNode(true);
+  itemElement.querySelector(".popup__info-term").textContent = term;
+  itemElement.querySelector(".popup__info-description").textContent = description;
+  return itemElement;
+};
+
+const createUserPreviewItem = (userName) => {
+  const itemElement = userPreviewTemplate.content.cloneNode(true);
+  itemElement.querySelector(".popup__list-item").textContent = userName;
+  return itemElement;
+};
 
 const handlePreviewPicture = ({ name, link }) => {
   imageElement.src = link;
@@ -78,6 +109,47 @@ const openRemoveCardModal = (cardId, cardElement) => {
   cardToDeleteElement = cardElement;
   clearValidation(removeCardForm, validationSettings);
   openModalWindow(removeCardModalWindow);
+};
+
+const handleInfoClick = async (cardId) => {
+  try {
+    const cards = await getCardList();
+    const card = cards.find((c) => c._id === cardId);
+
+    if (!card) return;
+
+    cardInfoModalInfoList.innerHTML = "";
+    cardInfoModalUserList.innerHTML = "";
+
+    cardInfoModalTitle.textContent = "Информация о карточке";
+
+    cardInfoModalInfoList.append(
+      createInfoItem("Описание:", card.name)
+    );
+    cardInfoModalInfoList.append(
+      createInfoItem("Дата создания:", formatDate(card.createdAt))
+    );
+    cardInfoModalInfoList.append(
+      createInfoItem("Владелец:", card.owner.name)
+    );
+    cardInfoModalInfoList.append(
+      createInfoItem("Количество лайков:", card.likes.length.toString())
+    );
+
+    cardInfoModalText.textContent = "Лайкнули:";
+
+    if (card.likes.length > 0) {
+      card.likes.forEach((user) => {
+        cardInfoModalUserList.append(createUserPreviewItem(user.name));
+      });
+    } else {
+      cardInfoModalUserList.append(createUserPreviewItem("Нет лайков"));
+    }
+
+    openModalWindow(cardInfoModalWindow);
+  } catch (err) {
+    console.error("Ошибка при получении статистики карточки:", err);
+  }
 };
 
 const handleProfileFormSubmit = async (evt) => {
@@ -142,6 +214,7 @@ const handleCardFormSubmit = async (evt) => {
         onDeleteCard: (cardId, cardElement) => {
           openRemoveCardModal(cardId, cardElement);
         },
+        onInfoClick: handleInfoClick,
         currentUserId,
       })
     );
@@ -220,6 +293,7 @@ Promise.all([getCardList(), getUserInfo()])
           onDeleteCard: (cardId, cardElement) => {
             openRemoveCardModal(cardId, cardElement);
           },
+          onInfoClick: handleInfoClick,
           currentUserId,
         })
       );
