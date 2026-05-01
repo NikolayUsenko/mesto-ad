@@ -82,7 +82,11 @@ const clearValidation = (formElement, settings) => {
     hideInputError(formElement, inputElement, settings);
   });
 
-  disableSubmitButton(buttonElement, settings);
+  if (inputList.length === 0) {
+    enableSubmitButton(buttonElement, settings);
+  } else {
+    disableSubmitButton(buttonElement, settings);
+  }
 };
 
 const enableValidation = (settings) => {
