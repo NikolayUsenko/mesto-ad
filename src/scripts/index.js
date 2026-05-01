@@ -6,7 +6,7 @@
   Из index.js не допускается что то экспортировать
 */
 
-import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard } from "./components/api.js";
+import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard, changeLikeCardStatus, deleteCardFromServer } from "./components/api.js";
 import { createCardElement, deleteCard, likeCard } from "./components/card.js";
 import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validation.js";
@@ -18,6 +18,18 @@ const validationSettings = {
   inactiveButtonClass: "popup__button_disabled",
   inputErrorClass: "popup__input_type_error",
   errorClass: "popup__error_visible",
+  customValidationRules: [
+    {
+      inputId: "user-name",
+      regex: /^[a-zA-Zа-яА-ЯёЁ\s\-]*$/,
+      errorMessage: "Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы"
+    },
+    {
+      inputId: "place-name",
+      regex: /^[a-zA-Zа-яА-ЯёЁ\s\-]*$/,
+      errorMessage: "Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы"
+    }
+  ]
 };
 
 enableValidation(validationSettings);
@@ -210,7 +222,7 @@ const handleCardFormSubmit = async (evt) => {
       createCardElement(newCard, {
         onPreviewPicture: handlePreviewPicture,
         onLikeIcon: (cardId, likeButton, likeCountElement, isLiked) =>
-          likeCard(cardId, likeButton, likeCountElement, isLiked),
+          likeCard(cardId, likeButton, likeCountElement, isLiked, changeLikeCardStatus),
         onDeleteCard: (cardId, cardElement) => {
           openRemoveCardModal(cardId, cardElement);
         },
@@ -236,7 +248,7 @@ const handleRemoveCardSubmit = async (evt) => {
   setButtonLoading(submitButton, true, defaultText, "Удаление...");
 
   try {
-    await deleteCard(cardToDeleteId, cardToDeleteElement);
+    await deleteCard(cardToDeleteId, cardToDeleteElement, deleteCardFromServer);
     closeModalWindow(removeCardModalWindow);
     cardToDeleteId = null;
     cardToDeleteElement = null;
@@ -289,7 +301,7 @@ Promise.all([getCardList(), getUserInfo()])
         createCardElement(card, {
           onPreviewPicture: handlePreviewPicture,
           onLikeIcon: (cardId, likeButton, likeCountElement, isLiked) =>
-            likeCard(cardId, likeButton, likeCountElement, isLiked),
+            likeCard(cardId, likeButton, likeCountElement, isLiked, changeLikeCardStatus),
           onDeleteCard: (cardId, cardElement) => {
             openRemoveCardModal(cardId, cardElement);
           },
