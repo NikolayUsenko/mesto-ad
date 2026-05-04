@@ -16,28 +16,20 @@ const hideInputError = (formElement, inputElement, settings) => {
   }
 };
 
-const checkCustomValidation = (inputElement, settings) => {
-  if (!settings.customValidationRules) return null;
-
-  const rule = settings.customValidationRules.find(r => r.inputId === inputElement.id);
-  if (rule && rule.regex && inputElement.value !== '') {
-    if (!rule.regex.test(inputElement.value)) {
-      return rule.errorMessage;
-    }
-  }
-  return null;
+const getCustomErrorMessage = (inputElement) => {
+  return inputElement.dataset.errorMessage || null;
 };
 
 const checkInputValidity = (formElement, inputElement, settings) => {
-  const customError = checkCustomValidation(inputElement, settings);
-
-  if (customError) {
-    showInputError(formElement, inputElement, customError, settings);
-    return false;
-  }
-
   if (!inputElement.validity.valid) {
-    showInputError(formElement, inputElement, inputElement.validationMessage, settings);
+    let errorMessage = inputElement.validationMessage;
+
+    const customMessage = getCustomErrorMessage(inputElement);
+    if (customMessage && (inputElement.validity.patternMismatch || inputElement.validity.valueMissing)) {
+      errorMessage = customMessage;
+    }
+
+    showInputError(formElement, inputElement, errorMessage, settings);
     return false;
   } else {
     hideInputError(formElement, inputElement, settings);

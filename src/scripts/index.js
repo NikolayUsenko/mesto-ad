@@ -18,18 +18,6 @@ const validationSettings = {
   inactiveButtonClass: "popup__button_disabled",
   inputErrorClass: "popup__input_type_error",
   errorClass: "popup__error_visible",
-  customValidationRules: [
-    {
-      inputId: "user-name",
-      regex: /^[a-zA-Zа-яА-ЯёЁ\s\-]*$/,
-      errorMessage: "Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы"
-    },
-    {
-      inputId: "place-name",
-      regex: /^[a-zA-Zа-яА-ЯёЁ\s\-]*$/,
-      errorMessage: "Разрешены только латинские, кириллические буквы, знаки дефиса и пробелы"
-    }
-  ]
 };
 
 enableValidation(validationSettings);
@@ -65,7 +53,6 @@ const removeCardModalWindow = document.querySelector(".popup_type_remove-card");
 const removeCardForm = removeCardModalWindow?.querySelector(".popup__form");
 
 const cardInfoModalWindow = document.querySelector(".popup_type_info");
-const cardInfoModalTitle = cardInfoModalWindow.querySelector(".popup__title");
 const cardInfoModalInfoList = cardInfoModalWindow.querySelector(".popup__info");
 const cardInfoModalText = cardInfoModalWindow.querySelector(".popup__text");
 const cardInfoModalUserList = cardInfoModalWindow.querySelector(".popup__list");
